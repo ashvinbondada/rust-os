@@ -14,25 +14,30 @@ pub extern "C" fn _start() -> ! {
 
     // x86_64::instructions::interrupts::int3();
     // unsafe {
-    //     *(0xdeadbeef as *mut u8) = 42;
+    //     *(0xdeadbeef Inter::.as_u8();
     // }
     fn stack_overflow() {
         stack_overflow();
     }
-    stack_overflow();
+    // stack_overflow();
 
     #[cfg(test)]
     test_main();
 
     println!("It did not crash!");
-    loop {}
+    os::hlt_loop();
+    // loop {
+    //     use os::print;
+    //     // for _ in 0..10000 {} // addded to slow down printing and see timer interrupt handling
+    //     print!("-");
+    // }
 }
 
 #[cfg(not(test))]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
-    loop {}
+    os::hlt_loop();
 }
 
 #[cfg(test)]
