@@ -12,14 +12,20 @@ pub extern "C" fn _start() -> ! {
     println!("Hello World{}", "!");
     os::init();
 
-    // x86_64::instructions::interrupts::int3();
-    // unsafe {
-    //     *(0xdeadbeef Inter::.as_u8();
-    // }
-    fn stack_overflow() {
-        stack_overflow();
+    /* ATTEMPT AT CAUSING A PAGE FAULT IN OS
+    let ptr = 0x20425c as *mut u8;
+    unsafe { let x = *ptr; }
+    println!("read worked!");
+
+    unsafe {
+        *ptr = 42;
     }
-    // stack_overflow();
+    println!("write worked!");
+    */
+    use x86_64::registers::control::Cr3;
+
+    let (level_4_page_table, _) = Cr3::read();
+    println!("Level 4 page table at : {:?}", level_4_page_table.start_address());
 
     #[cfg(test)]
     test_main();
