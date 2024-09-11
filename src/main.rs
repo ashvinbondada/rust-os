@@ -6,37 +6,36 @@
 
 use core::panic::PanicInfo;
 use os::println;
+use bootloader::{BootInfo, entry_point};
 
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
+entry_point!(kernel_main);
+
+fn kernel_main(boot_info: &'static BootInfo) -> ! {
+    use os::memory;
+    use x86_64::{structures::paging::Page, VirtAddr}; // new import
+    use os::memory::BootInfoFrameAllocator;
+
     println!("Hello World{}", "!");
     os::init();
+    let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
+    let mut mapper = unsafe { memory::init(phys_mem_offset) };
+    let mut frame_allocator = unsafe {
+        BootInfoFrameAllocator::init(&boot_info.memory_map)
+    };
 
-    /* ATTEMPT AT CAUSING A PAGE FAULT IN OS
-    let ptr = 0x20425c as *mut u8;
-    unsafe { let x = *ptr; }
-    println!("read worked!");
+    // map an unused page
+    let page = Page::containing_address(VirtAddr::new(0));
+    memory::create_example_mapping(page, &mut mapper, &mut frame_allocator);
 
-    unsafe {
-        *ptr = 42;
-    }
-    println!("write worked!");
-    */
-    use x86_64::registers::control::Cr3;
-
-    let (level_4_page_table, _) = Cr3::read();
-    println!("Level 4 page table at : {:?}", level_4_page_table.start_address());
-
+    // write the string `New!` to the screen through the new mapping
+    let page_ptr: *mut u64 = page.start_address().as_mut_ptr();
+    unsafe { page_ptr.offset(400).write_volatile(0x_f021_f077_f065_f04e)};
+    // as before
     #[cfg(test)]
     test_main();
 
     println!("It did not crash!");
     os::hlt_loop();
-    // loop {
-    //     use os::print;
-    //     // for _ in 0..10000 {} // addded to slow down printing and see timer interrupt handling
-    //     print!("-");
-    // }
 }
 
 #[cfg(not(test))]

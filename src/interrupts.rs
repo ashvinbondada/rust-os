@@ -112,7 +112,7 @@ extern "x86-interrupt" fn keyboard_interrupt_handler(
 extern "x86-interrupt" fn timer_interrupt_handler(
     stack_frame: InterruptStackFrame
 ) {
-    // print!(".");
+    print!(".");
 
     unsafe {
         PICS.lock()
